@@ -4,7 +4,6 @@
 - cdcs image is hardcoded in the django-deployment: `wipp-registry:k8s`
 - django-ingress has `xxx.xxx.xxx.xxx` instead of the local machine's ip
 - mongo-init-config-map has hardcoded values USERNAME/PASSWORD
-- explore unable to reach server URI on MacOS with Docker for Mac
 
 
 ## Installation Notes
@@ -37,6 +36,22 @@ kubectl create secret generic postgres \
 ```shell
 kubectl apply -f k8s/
 ```
+
+### Troubleshoot
+
+#### Local deployment with HTTP
+
+Update `django-cluster-ip-service.yaml`, and change the `type` to:
+```yaml
+type: NodePort
+```
+After deployment, run:
+```shell
+kubectl get services/django-cluster-ip-service -o go-template='{{(index .spec.ports 0).nodePort}}'
+```
+
+This command will return a port number: DJANGO_PORT.
+You can then access the instance using your IP address, and the port (e.g. http://xxx.xxx.xxx.xxx:DJANGO_PORT).
 
 ## TODO
 
