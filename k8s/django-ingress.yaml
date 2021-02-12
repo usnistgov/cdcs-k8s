@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: django-ingress
+spec:
+  tls:
+    - hosts:
+      - cdcs.xxx.xxx.xxx.xxx.nip.io
+  rules:
+  - host: cdcs.xxx.xxx.xxx.xxx.nip.io
+    http:
+      paths:
+      - backend:
+          serviceName: django-cluster-ip-service
+          servicePort: 8000

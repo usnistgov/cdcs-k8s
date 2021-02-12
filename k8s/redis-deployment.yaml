@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdcs-redis-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: cdcs-redis
+  template:
+    metadata:
+      labels:
+        component: cdcs-redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:5.0
+        args: ["--requirepass", "$(REDIS_PASS)"]
+        ports:
+        - containerPort: 6379
+        env:
+        - name: REDIS_PASS
+          valueFrom:
+            secretKeyRef:
+              name: redis
+              key: REDIS_PASS

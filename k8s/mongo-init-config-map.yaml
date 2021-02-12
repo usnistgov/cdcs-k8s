@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cdcs-mongo-init-configmap
+data:
+  mongo-init.js: |
+    db.createUser(
+        {
+            user: "USERNAME",
+            pwd: "PASSWORD",
+            roles: [ "readWrite" ]
+        }
+    );

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdcs-mongo-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: cdcs-mongo
+  template:
+    metadata:
+      labels:
+        component: cdcs-mongo
+    spec:
+      volumes:
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-database-pvc
+        - name: mongodb-scripts
+          configMap:
+            name: cdcs-mongo-init-configmap
+            items:
+              - key: mongo-init.js
+                path: mongo-init.js
+      containers:
+      - image: mongo:4.0.3
+        name: mongodb
+        args: ["--auth"]
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb
+              key: MONGO_INITDB_ROOT_USERNAME
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb
+              key: MONGO_INITDB_ROOT_PASSWORD
+        - name: MONGO_INITDB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mongodb
+              key: MONGO_INITDB_DATABASE
+        - name: MONGO_USER
+          valueFrom:
+            secretKeyRef:
+              name: mongodb
+              key: MONGO_USER
+        - name: MONGO_PASS
+          valueFrom:
+            secretKeyRef:
+              name: mongodb
+              key: MONGO_PASS
+        volumeMounts:
+        - mountPath: /data/db
+          name: mongo-storage
+          subPath: db
+        - mountPath: /docker-entrypoint-initdb.d
+          name: mongodb-scripts
+          readOnly: true
+        ports:
+        - containerPort: 27017
+      restartPolicy: Always
