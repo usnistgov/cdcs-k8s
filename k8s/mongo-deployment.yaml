@@ -20,8 +20,8 @@ spec:
           configMap:
             name: cdcs-mongo-init-configmap
             items:
-              - key: mongo-init.js
-                path: mongo-init.js
+              - key: mongo-init.sh
+                path: mongo-init.sh
       containers:
       - image: mongo:4.0.3
         name: mongodb
