@@ -2,5 +2,6 @@ secrets/cdcs-secrets
 secrets/mongo-secrets
 secrets/postgres-secrets
 secrets/redis-secrets
+init/superuser-secrets
 
 **/.DS_Store

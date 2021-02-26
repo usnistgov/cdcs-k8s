@@ -1,16 +1,10 @@
 # CDCS K8s
 
-## FIXME
-- cdcs image is hardcoded in the django-deployment: `wipp-registry:k8s`
-- django-ingress has `xxx.xxx.xxx.xxx` instead of the local machine's ip
-- mongo-init-config-map has hardcoded values USERNAME/PASSWORD
-
-
 ## Installation Notes
 
 ### Prerequisites
-- Docker for Mac with Kubernetes Cluster enabled
-- Ingress Nginx: https://kubernetes.github.io/ingress-nginx/deploy/#docker-for-mac
+- Kubernetes Cluster
+- Ingress Nginx: https://kubernetes.github.io/ingress-nginx/deploy/
 
 ### Create Secrets
 #### From files
@@ -30,6 +24,12 @@ kubectl create secret generic postgres \
 --from-literal="POSTGRES_PASSWORD=<password>" \
 --from-literal="POSTGRES_DB=<db>"
 ```
+
+### Configure Ingress
+
+In `k8s/django-ingress.yaml`:
+- Replace `CDCS_HOSTNAME` by the hostname to be used
+- Replace `CDCS_TLS` by name of the secret containing the TLS certificate and private key (see https://kubernetes.io/docs/concepts/services-networking/ingress/#tls)
 
 ### Deploy
 
@@ -53,10 +53,46 @@ kubectl get services/django-cluster-ip-service -o go-template='{{(index .spec.po
 This command will return a port number: DJANGO_PORT.
 You can then access the instance using your IP address, and the port (e.g. http://xxx.xxx.xxx.xxx:DJANGO_PORT).
 
-## TODO
+#### HTTPS deployment with self-signed certificate
 
-- look into namespaces for several CDCS instances on the same cluster
-- use envFrom secret for mongo/postgres instead of valueFrom
+If you are using a self-signed certificate or certificate bundle that contains a self-signed certificate in the chain, the certificate needs to be mounted inside of the cdcs container and the `REQUESTS_CA_BUNDLE` environment variable needs to be set.
+
+Create configmap from certificate bundle:
+```
+kubectl create configmap cdcs-capemstore --from-file=cdcs.pem 
+```
+
+Modify `k8s/django-deployment.yaml` to mount the certificate and set the `REQUESTS_CA_BUNDLE` environment variable:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdcs-django-deployment
+spec:
+  ...
+  template:
+    ...
+    spec:
+      containers:
+      - image: wipp-registry:k8s
+        name: cdcs
+        ...
+        volumeMounts:
+        - name: ca-pemstore
+          mountPath: /etc/ssl/certs/cdcs.pem
+          subPath: cdcs.pem
+          readOnly: false
+        env:
+        - name: REQUESTS_CA_BUNDLE
+          value: /etc/ssl/certs/cdcs.pem
+        ...
+      ...
+      volumes:
+      - name: ca-pemstore
+        configMap:
+          name: cdcs-capemstore
+```
 
 
 

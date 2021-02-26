@@ -5,9 +5,10 @@ metadata:
 spec:
   tls:
     - hosts:
-      - cdcs.xxx.xxx.xxx.xxx.nip.io
+      - CDCS_HOSTNAME
+      secretName: CDCS_TLS
   rules:
-  - host: cdcs.xxx.xxx.xxx.xxx.nip.io
+  - host: CDCS_HOSTNAME
     http:
       paths:
       - backend:
