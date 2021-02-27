@@ -25,6 +25,55 @@ kubectl create secret generic postgres \
 --from-literal="POSTGRES_DB=<db>"
 ```
 
+#### Description of environment variables
+
+Below is the list of environment variables to set in the `*-secrets` files and their description.
+
+##### mongo-secrets
+
+| Variable | Description |
+| ----------- | ----------- |
+| MONGO_INITDB_ROOT_USERNAME      | Admin user for MongoDB (should be different from `MONGO_USER`) |
+| MONGO_INITDB_ROOT_PASSWORD      | Admin password for MongoDB |
+| MONGO_USER            | User for MongoDB (should be different from `MONGO_ADMIN_USER`) |
+| MONGO_PASS            | User password for MongoDB |
+| MONGO_INITDB_DATABASE              | Name of the Mongo database (e.g. cdcs) |
+
+##### postgres-secrets
+
+| Variable | Description |
+| ----------- | ----------- |
+| POSTGRES_USER         | User for Postgres |
+| POSTGRES_PASSWORD     | User password for Postgres |
+| POSTGRES_DB           | Name of the Postgres database (e.g. cdcs) |
+
+##### redis-secrets
+
+| Variable | Description |
+| ----------- | ----------- |
+| REDIS_PASS            | Password for Redis |
+
+##### cdcs-secrets
+
+| Variable | Description |
+| ----------- | ----------- |
+| MONGO_HOST            | Hostname for MongoDB (name of MongoDB service) |
+| MONGO_ADMIN_USER      | Admin user for MongoDB (should be different from `MONGO_USER`) |
+| MONGO_ADMIN_PASS      | Admin password for MongoDB |
+| MONGO_USER            | User for MongoDB (should be different from `MONGO_ADMIN_USER`) |
+| MONGO_PASS            | User password for MongoDB |
+| MONGO_DB              | Name of the Mongo database (e.g. cdcs) |
+| POSTGRES_HOST         | Hostname for Postgres (name of Postgres service) |
+| POSTGRES_USER         | User for Postgres |
+| POSTGRES_PASS         | User password for Postgres |
+| POSTGRES_DB           | Name of the Postgres database (e.g. cdcs) |
+| REDIS_HOST            | Hostname for Redis (name of Redis service) |
+| REDIS_PASS            | Password for Redis |
+| SERVER_URI            | URI of server |
+| SERVER_NAME           | Name of the server (e.g. MDCS, WIPP-Registry, ...) |
+| ALLOWED_HOSTS         | [Allowed hosts](https://docs.djangoproject.com/en/2.2/ref/settings/#allowed-hosts) |
+| DJANGO_SECRET_KEY     | [Secret Key](https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/#secret-key) for Django (should be a "large random value") |
+
 ### Configure Ingress
 
 In `k8s/django-ingress.yaml`:
@@ -35,6 +84,32 @@ In `k8s/django-ingress.yaml`:
 
 ```shell
 kubectl apply -f k8s/
+```
+
+### Create a superuser
+
+The superuser is the first user that will be added to the CDCS. This is the
+main administrator on the platform. Once it has been created, more users
+can be added using the web interface. Wait for the CDCS server to start, then:
+
+#### Create cdcs-superuser secret
+Create secrets file `cdcs-superuser`, by copying `cdcs-superuser-example` file from the `init` folder without the `-example` suffix.
+
+| Variable | Description |
+| ----------- | ----------- |
+| SUPERUSER_USERNAME        | Username for superuser |
+| SUPERUSER_PASSWORD        | User password for superuser |
+| SUPERUSER_EMAIL           | Email address for superuser (optional) |
+
+Then run:
+```shell
+kubectl create secret generic cdcs-superuser --from-env-file=cdcs-superuser
+```
+
+#### Run superuser creation Job
+
+```shell
+kubectl apply -f init/create-superuser.yaml
 ```
 
 ### Troubleshoot
