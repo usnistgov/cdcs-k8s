@@ -35,7 +35,7 @@ Below is the list of environment variables to set in the `*-secrets` files and t
 | ----------- | ----------- |
 | MONGO_INITDB_ROOT_USERNAME      | Admin user for MongoDB (should be different from `MONGO_USER`) |
 | MONGO_INITDB_ROOT_PASSWORD      | Admin password for MongoDB |
-| MONGO_USER            | User for MongoDB (should be different from `MONGO_ADMIN_USER`) |
+| MONGO_USER            | User for MongoDB (should be different from `MONGO_INITDB_ROOT_USERNAME`) |
 | MONGO_PASS            | User password for MongoDB |
 | MONGO_INITDB_DATABASE              | Name of the Mongo database (e.g. cdcs) |
 
@@ -58,9 +58,7 @@ Below is the list of environment variables to set in the `*-secrets` files and t
 | Variable | Description |
 | ----------- | ----------- |
 | MONGO_HOST            | Hostname for MongoDB (name of MongoDB service) |
-| MONGO_ADMIN_USER      | Admin user for MongoDB (should be different from `MONGO_USER`) |
-| MONGO_ADMIN_PASS      | Admin password for MongoDB |
-| MONGO_USER            | User for MongoDB (should be different from `MONGO_ADMIN_USER`) |
+| MONGO_USER            | User for MongoDB |
 | MONGO_PASS            | User password for MongoDB |
 | MONGO_DB              | Name of the Mongo database (e.g. cdcs) |
 | POSTGRES_HOST         | Hostname for Postgres (name of Postgres service) |
