@@ -93,7 +93,7 @@ main administrator on the platform. Once it has been created, more users
 can be added using the web interface. Wait for the CDCS server to start, then:
 
 #### Create cdcs-superuser secret
-Create secrets file `cdcs-superuser`, by copying `cdcs-superuser-example` file from the `init` folder without the `-example` suffix.
+Create secrets file `superuser-secrets`, by copying `superuser-secrets-example` file from the `init` folder without the `-example` suffix.
 
 | Variable | Description |
 | ----------- | ----------- |
@@ -103,7 +103,7 @@ Create secrets file `cdcs-superuser`, by copying `cdcs-superuser-example` file f
 
 Then run:
 ```shell
-kubectl create secret generic cdcs-superuser --from-env-file=cdcs-superuser
+kubectl create secret generic cdcs-superuser --from-env-file=superuser-secrets
 ```
 
 #### Run superuser creation Job
