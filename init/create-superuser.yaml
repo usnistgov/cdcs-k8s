@@ -15,7 +15,7 @@ spec:
   template:
     spec:
       containers:
-      - image: wipp-registry:k8s
+      - image: wipp/wipp-registry:1.0.1
         name: cdcs
         command: ['/bin/bash', '/srv/curator/createsuperuser.sh']
         envFrom:

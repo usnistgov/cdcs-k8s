@@ -13,7 +13,7 @@ spec:
         component: cdcs-django
     spec:
       containers:
-      - image: wipp-registry:k8s
+      - image: wipp/wipp-registry:1.0.1
         name: cdcs
         args: ["nmrr"]
         envFrom:
