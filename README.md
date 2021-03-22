@@ -1,4 +1,5 @@
-# CDCS K8s
+# Kubernetes Installation for WIPP-Registry
+This repository contains Kubernetes deployment instructions for the [WIPP-Registry project](https://github.com/usnistgov/WIPP-Registry.git)
 
 ## Installation Notes
 
@@ -68,9 +69,22 @@ Below is the list of environment variables to set in the `*-secrets` files and t
 | REDIS_HOST            | Hostname for Redis (name of Redis service) |
 | REDIS_PASS            | Password for Redis |
 | SERVER_URI            | URI of server |
-| SERVER_NAME           | Name of the server (e.g. MDCS, WIPP-Registry, ...) |
-| ALLOWED_HOSTS         | [Allowed hosts](https://docs.djangoproject.com/en/2.2/ref/settings/#allowed-hosts) |
+| SERVER_NAME           | Name of the server, used to distinguish instances in federated queries (e.g. {INSTITUTION}-WIPP or {INSTITUTION}-{CUSTOM-WIPP-NAME}) |
+| ALLOWED_HOSTS         | Comma-separated list of hosts (e.g. ALLOWED_HOSTS=127.0.0.1,localhost), see [Allowed hosts](https://docs.djangoproject.com/en/2.2/ref/settings/#allowed-hosts) |
 | DJANGO_SECRET_KEY     | [Secret Key](https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/#secret-key) for Django (should be a "large random value") |
+| SETTINGS              | Settings file to use during deployment, default value is `settings` ([more info in the Settings section](#settings))|
+| MONITORING_SERVER_URI | (optional) URI of an APM server for monitoring |
+| SAML_METADATA_CONF_URL| (optional) URI of a SAML metadata configuration |
+| SAML_CREATE_USER      | (optional) Determines if a new Django user should be created for new users |
+| SAML_ATTRIBUTES_MAP_EMAIL| (optional) Mapping of Django user attributes to SAML2 user attribute - email |
+| SAML_ATTRIBUTES_MAP_USERNAME| (optional) Mapping of Django user attributes to SAML2 user attribute - username |
+| SAML_ATTRIBUTES_MAP_FIRSTNAME| (optional) Mapping of Django user attributes to SAML2 user attribute - firstname |
+| SAML_ATTRIBUTES_MAP_LASTNAME| (optional) Mapping of Django user attributes to SAML2 user attribute - lastname |
+| SAML_ASSERTION_URL| (optional) A URL to validate incoming SAML responses against |
+| SAML_ENTITY_ID| (optional) The optional entity ID string to be passed in the 'Issuer' element of authn request, if required by the IDP |
+| SAML_NAME_ID_FORMAT| (optional) Set to the string 'None', to exclude sending the 'Format' property of the 'NameIDPolicy' element in authn requests. Default value if not specified is 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient' |
+| SAML_USE_JWT| (optional) JWT authentication - False |
+| SAML_CLIENT_SETTINGS| (optional) Client settings - False |
 
 ### Configure Ingress
 
@@ -109,6 +123,36 @@ kubectl create secret generic cdcs-superuser --from-env-file=superuser-secrets
 ```shell
 kubectl apply -f init/create-superuser.yaml
 ```
+
+#### Settings
+
+Starting from MDCS/NMRR 2.14, repositories of these two projects will
+have settings ready for deployment (not production).
+
+The deployment can be further customized by mounting additional settings
+to the deployed containers:
+- **Option 1 (default):** Use settings from the image. 
+    - set the `SETTINGS` variable to `settings`.
+- **Option 2**: Use default settings from the CDCS image and customize
+them. Custom settings can be used to override default settings or add additional settngs. For example:
+    - Create a config map containing a `custom_settings.py` entry for the custom settings,
+    - Update the `django-deployment.yml` file and create a volume for the config map that will
+        mount the settings at the following location:
+        ```
+        /srv/curator/nmrr/custom_settings.py
+        ```
+    - set the `SETTINGS` variable to `custom_settings` to use the custom settings
+
+For more information about production deployment of a Django project,
+please check the [Deployment Checklist](https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/#deployment-checklist)
+
+#### SAML2 authentication
+
+For SAML-based authentication:
+- uncomment and set `SAML_*` variables in `cdcs-secret` file
+- change the image in `django-deployment.yaml` from `wipp/wipp-registry:{version}` to `wipp/wipp-registry:{version}-saml` (e.g. `wipp/wipp-registry:1.1.0-saml`)
+
+More information about the SMAL2 configuration can be found in the [django-saml2-auth module](https://github.com/fangli/django-saml2-auth), sample configuration for Keycloak is provided in the `cdcs-secret-example` file.
 
 ### Troubleshoot
 

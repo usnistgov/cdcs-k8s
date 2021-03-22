@@ -13,8 +13,9 @@ spec:
         component: cdcs-django
     spec:
       containers:
-      - image: wipp/wipp-registry:1.0.1
+      - image: wipp/wipp-registry:1.1.0
         name: cdcs
+        command: ['/docker-entrypoint-gunicorn.sh']
         args: ["nmrr"]
         envFrom:
         - secretRef:
