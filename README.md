@@ -211,5 +211,7 @@ spec:
           name: cdcs-capemstore
 ```
 
+## Disclaimer
 
+[NIST Disclaimer](LICENSE.md)
 
