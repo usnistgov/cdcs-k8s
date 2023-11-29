@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cdcs-pv-mongo
+  labels:
+    type: nfs
+spec:
+  capacity:
+    storage: MONGO_STORAGE_SIZE
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: NFS_SERVER_IP
+    path: MONGO_VOLUME_PATH
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cdcs-pvc-mongo
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: MONGO_STORAGE_SIZE

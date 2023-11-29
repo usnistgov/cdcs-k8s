@@ -5,7 +5,8 @@ metadata:
 data:
   createsuperuser.sh: |
     echo "Creating super user..."
-    python ./manage.py shell -c  "from django.contrib.auth.models import User; User.objects.create_superuser('$SUPERUSER_USERNAME', '$SUPERUSER_EMAIL', '$SUPERUSER_PASSWORD')"
+    python ./manage.py shell -c \
+      "from django.contrib.auth.models import User; User.objects.create_superuser('$SUPERUSER_USERNAME', '$SUPERUSER_EMAIL', '$SUPERUSER_PASSWORD')"
 ---
 apiVersion: batch/v1
 kind: Job
@@ -15,13 +16,15 @@ spec:
   template:
     spec:
       containers:
-      - image: wipp/wipp-registry:1.1.0
+      - image: CDCS_IMAGE
         name: cdcs
         command: ['/bin/bash', '/srv/curator/createsuperuser.sh']
         envFrom:
         - secretRef:
             name: cdcs-superuser
         - secretRef:
+            name: cdcs
+        - configMapRef:
             name: cdcs
         volumeMounts:
           - name: cdcs-superuser-config

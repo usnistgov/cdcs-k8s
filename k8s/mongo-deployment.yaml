@@ -15,7 +15,7 @@ spec:
       volumes:
         - name: mongo-storage
           persistentVolumeClaim:
-            claimName: mongo-database-pvc
+            claimName: cdcs-pvc-mongo
         - name: mongodb-scripts
           configMap:
             name: cdcs-mongo-init-configmap
@@ -23,9 +23,9 @@ spec:
               - key: mongo-init.sh
                 path: mongo-init.sh
       containers:
-      - image: mongo:4.0.3
+      - image: mongo:4.4
         name: mongodb
-        args: ["--auth"]
+        args: ["--auth", "--noscripting"]
         env:
         - name: MONGO_INITDB_ROOT_USERNAME
           valueFrom:
@@ -55,7 +55,6 @@ spec:
         volumeMounts:
         - mountPath: /data/db
           name: mongo-storage
-          subPath: db
         - mountPath: /docker-entrypoint-initdb.d
           name: mongodb-scripts
           readOnly: true

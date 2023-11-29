@@ -1,7 +1,11 @@
-secrets/cdcs-secrets
-secrets/mongo-secrets
-secrets/postgres-secrets
-secrets/redis-secrets
+config/cdcs-secrets
+config/mongo-secrets
+config/postgres-secrets
+config/redis-secrets
+config/cdcs-config
 init/superuser-secrets
 
 **/.DS_Store
+.idea/
+*.pem
+

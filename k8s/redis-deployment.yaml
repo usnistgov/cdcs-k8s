@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: redis
-        image: redis:5.0
+        image: redis:7.0
         args: ["--requirepass", "$(REDIS_PASS)"]
         ports:
         - containerPort: 6379

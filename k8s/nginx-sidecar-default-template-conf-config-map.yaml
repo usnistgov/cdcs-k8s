@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cdcs-nginx-default-template-conf
+data:
+  default.conf.template: |
+    # HTTP configuration
+    upstream curator {
+        server localhost:8000;
+    }
+
+    server {
+      charset utf-8;
+      listen 80 default_server;
+      listen [::]:80 default_server;
+
+      location / {
+        proxy_pass http://curator;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_read_timeout 120s;
+      }
+
+      location /static {
+        autoindex off;
+        alias /srv/curator_static;
+      }
+    }

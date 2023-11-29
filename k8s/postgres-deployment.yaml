@@ -15,16 +15,15 @@ spec:
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
-            claimName: postgres-database-pvc
+            claimName: cdcs-pvc-postgres
       containers:
         - name: postgres
-          image: postgres:9.6
+          image: postgres:14
           ports:
             - containerPort: 5432
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
-              subPath: postgres
           env:
             - name: POSTGRES_USER
               valueFrom:

@@ -13,13 +13,54 @@ spec:
         component: cdcs-django
     spec:
       containers:
-      - image: wipp/wipp-registry:1.1.0
+      - image: CDCS_IMAGE
+        imagePullPolicy: Always
         name: cdcs
-        command: ['/docker-entrypoint-gunicorn.sh']
-        args: ["nmrr"]
+        args: ["$(PROJECT_NAME)", "gunicorn"]
         envFrom:
         - secretRef:
             name: cdcs
+        - configMapRef:
+            name: cdcs
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: "$(PROJECT_NAME).$(SETTINGS)"
         ports:
         - containerPort: 8000
+        volumeMounts:
+            - name: staticfiles
+              mountPath: /srv/curator/static.prod
+            - name: mediafiles
+              mountPath: /srv/curator/media
+      - name: nginx-sidecar
+        image: nginx:1.23
+        imagePullPolicy: Always
+        ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+        volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+              readOnly: true
+            - name: nginx-default-template-conf
+              mountPath: /etc/nginx/templates/default.conf.template
+              subPath: default.conf.template
+              readOnly: true
+            - name: staticfiles
+              mountPath: /srv/curator_static
+              readOnly: true
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: cdcs-nginx-conf
+        - name: nginx-default-template-conf
+          configMap:
+            name: cdcs-nginx-default-template-conf
+        - name: staticfiles
+          emptyDir: {}
+        - name: mediafiles
+          persistentVolumeClaim:
+            claimName: cdcs-pvc-media
       restartPolicy: Always
