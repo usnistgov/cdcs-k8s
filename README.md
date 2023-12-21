@@ -105,7 +105,7 @@ files and their description.
 | POSTGRES_USER     | User for PostgreSQL                                                                                                                      |
 | POSTGRES_PASS     | Password for PostgreSQL                                                                                                                  |
 | REDIS_PASS        | Password for Redis                                                                                                                       |
-| DJANGO_SECRET_KEY | [Secret Key](https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/#secret-key) for Django (should be a "large random value") |
+| DJANGO_SECRET_KEY | [Secret Key](https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/#secret-key) for Django (should be a "large random value") |
 
 #### cdcs-config
 
@@ -119,7 +119,7 @@ files and their description.
 | REDIS_HOST            | Hostname for Redis (name of Redis service)                                                                                                                     |
 | SERVER_URI            | URI of server                                                                                                                                                  |
 | SERVER_NAME           | Name of the server, used to distinguish instances in federated queries (e.g. {INSTITUTION} or {INSTITUTION}-{CUSTOM-INSTANCE-NAME})                            |
-| ALLOWED_HOSTS         | Comma-separated list of hosts (e.g. ALLOWED_HOSTS=127.0.0.1,localhost), see [Allowed hosts](https://docs.djangoproject.com/en/2.2/ref/settings/#allowed-hosts) |
+| ALLOWED_HOSTS         | Comma-separated list of hosts (e.g. ALLOWED_HOSTS=127.0.0.1,localhost), see [Allowed hosts](https://docs.djangoproject.com/en/4.2/ref/settings/#allowed-hosts) |
 | SETTINGS              | Settings file to use during deployment, default value is `settings` ([more info in the Settings section](#settings))                                           |
 | MONITORING_SERVER_URI | (optional) URI of an APM server for monitoring                                                                                                                 |
 | PROCESSES             | (optional) Number of Gunicorn workers to start (default `workers=cpu_count() * 2 + 1`)                                                                         |
@@ -307,7 +307,7 @@ example:
     - set the `SETTINGS` variable to `custom_settings` to use the custom settings
 
 For more information about production deployment of a Django project,
-please check the [Deployment Checklist](https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/#deployment-checklist)
+please check the [Deployment Checklist](https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/#deployment-checklist)
 
 ## SAML2 authentication
 
