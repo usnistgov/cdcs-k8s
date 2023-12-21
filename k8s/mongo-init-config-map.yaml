@@ -14,4 +14,4 @@ data:
                 roles: [ "readWrite" ]
             }
         )
-        exit' | mongo
+        exit' | mongosh
