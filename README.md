@@ -149,6 +149,8 @@ sed -i -e "s;MONGO_STORAGE_SIZE;10Gi;g" \
   ./volumes/**/*.yaml
 sed -i -e "s;POSTGRES_STORAGE_SIZE;10Gi;g" \
   ./volumes/**/*.yaml
+sed -i -e "s;REDIS_STORAGE_SIZE;10Gi;g" \
+  ./volumes/**/*.yaml
 ```
 
 ### Using HostPath (single node deployments ONLY!)
@@ -161,6 +163,8 @@ sed -i -e "s;POSTGRES_VOLUME_PATH;/path/to/my/postgres_data;g" \
   ./volumes/local/postgres-volume-claim.yaml
 sed -i -e "s;MEDIA_VOLUME_PATH;/path/to/my/media_data;g" \
   ./volumes/local/media-volume-claim.yaml
+sed -i -e "s;REDIS_VOLUME_PATH;/path/to/my/redis_data;g" \
+  ./volumes/local/redis-volume-claim.yaml
 ```
 
 To deploy the local volumes for the database, enter the following command:
@@ -173,9 +177,9 @@ uncontrolled behavior!
 
 ### Using NFS
 For multi-nodes deployment, several options make volumes available to the cluster. As an 
-example, NFS claims have been implemented in this repository. Three (3) variables need 
-to be set up in this configuration: `MONGO_VOLUME_PATH`, `POSTGRES_VOLUME_PATH` and 
-`NFS_SERVER_IP`. Here are the commands to configure them:
+example, NFS claims have been implemented in this repository. Five (5) variables need 
+to be set up in this configuration: `MONGO_VOLUME_PATH`, `POSTGRES_VOLUME_PATH`, `REDIS_VOLUME_PATH` 
+`MEDIA_VOLUME_PATH` and `NFS_SERVER_IP`. Here are the commands to configure them:
 ```shell
 # Change the path to the Mongo and PostgreSQL NFS shared folders.
 sed -i -e "s;MONGO_VOLUME_PATH;/path/to/my/mongo_data;g" \
@@ -184,6 +188,8 @@ sed -i -e "s;POSTGRES_VOLUME_PATH;/path/to/my/postgres_data;g" \
   ./volumes/nfs/postgres-volume-claim.yaml
 sed -i -e "s;MEDIA_VOLUME_PATH;/path/to/my/media_data;g" \
   ./volumes/nfs/media-volume-claim.yaml
+sed -i -e "s;REDIS_VOLUME_PATH;/path/to/my/redis_data;g" \
+  ./volumes/nfs/redis-volume-claim.yaml
 # Configure the NFS server IP for both file.
 sed -i -e "s;NFS_SERVER_IP;1.2.3.4;g" ./volumes/nfs/*-volume-claim.yaml
 ```
@@ -199,8 +205,8 @@ Ensure there are no errors with the volume creation by typing:
 ```shell
 kubectl get pvc | grep -i -v bound
 ```
-Volume claims named `cdcs-pvc-mongo` and `cdcs-pvc-postgres` should not appear in the 
-list returned by the command.
+Volume claims named `cdcs-pvc-media`, `cdcs-pvc-mongo`, `cdcs-pvc-redis` 
+and `cdcs-pvc-postgres` should not appear in the list returned by the command.
 
 ## Deployment
 

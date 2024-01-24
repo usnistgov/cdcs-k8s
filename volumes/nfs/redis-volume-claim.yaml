@@ -1,27 +1,26 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: cdcs-pv-media
+  name: cdcs-pv-redis
   labels:
-    type: local
+    type: nfs
 spec:
   capacity:
-    storage: MEDIA_STORAGE_SIZE
+    storage: REDIS_STORAGE_SIZE
   accessModes:
     - ReadWriteMany
-  hostPath:
-    path: MEDIA_VOLUME_PATH
+  nfs:
+    server: NFS_SERVER_IP
+    path: REDIS_VOLUME_PATH
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: cdcs-pvc-media
+  name: cdcs-pvc-redis
 spec:
   storageClassName: ""
   accessModes:
     - ReadWriteMany
-  volumeName: cdcs-pv-media
   resources:
     requests:
-      storage: MEDIA_STORAGE_SIZE
-
+      storage: REDIS_STORAGE_SIZE

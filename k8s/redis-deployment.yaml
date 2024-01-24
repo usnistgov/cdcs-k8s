@@ -24,3 +24,10 @@ spec:
             secretKeyRef:
               name: redis
               key: REDIS_PASS
+        volumeMounts:
+          - mountPath: /data
+            name: redis-storage
+      volumes:
+        - name: redis-storage
+          persistentVolumeClaim:
+            claimName: cdcs-pvc-redis

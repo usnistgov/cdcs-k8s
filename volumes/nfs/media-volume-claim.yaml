@@ -6,7 +6,7 @@ metadata:
     type: nfs
 spec:
   capacity:
-    storage: 10Gi
+    storage: MEDIA_STORAGE_SIZE
   accessModes:
     - ReadWriteMany
   nfs:
@@ -23,4 +23,4 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: 10Gi
+      storage: MEDIA_STORAGE_SIZE
