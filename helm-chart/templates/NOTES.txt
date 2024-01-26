@@ -1,0 +1,4 @@
+1. The system has been deployed at the following URL:
+{{- if .Values.cdcs.ingress.enabled }}
+  http{{ if .Values.cdcs.ingress.tls }}s{{ end }}://{{ .Values.cdcs.ingress.hostname }}
+{{- end }}

@@ -1,0 +1,52 @@
+{{- if .Values.cdcs.ingress.enabled -}}
+{{- $fullName := include "cdcs.fullname" . -}}
+{{- if and .Values.cdcs.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
+  {{- if not (hasKey .Values.cdcs.ingress.annotations "kubernetes.io/ingress.class") }}
+  {{- $_ := set .Values.cdcs.ingress.annotations "kubernetes.io/ingress.class" .Values.cdcs.ingress.className}}
+  {{- end }}
+{{- end }}
+{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1
+{{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1beta1
+{{- else -}}
+apiVersion: extensions/v1beta1
+{{- end }}
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  {{- with .Values.cdcs.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if and .Values.cdcs.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
+  ingressClassName: {{ .Values.cdcs.ingress.className }}
+  {{- end }}
+  {{- if .Values.cdcs.ingress.tls }}
+  tls:
+    {{- range .Values.cdcs.ingress.tls }}
+    - hosts:
+      - {{ .Values.cdcs.ingress.hostname | quote }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.cdcs.ingress.hostname | quote }}
+      http:
+        paths:
+          - path: "/"
+            {{- if semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion }}
+            pathType: Prefix
+            {{- end }}
+            backend:
+              {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: 8080
+              {{- else }}
+              serviceName: {{ $fullName }}
+              servicePort: 8080
+              {{- end }}
+{{- end }}
