@@ -9,3 +9,6 @@ init/superuser-secrets
 .idea/
 *.pem
 
+/helm-chart/Chart.lock
+/helm-chart/values.*.yaml
+/helm-chart/charts/*

@@ -1,0 +1,181 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-cdcs-django
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.cdcs.replicas }}
+  selector:
+    matchLabels:
+      component: cdcs-django
+  template:
+    metadata:
+      labels:
+        component: cdcs-django
+    spec:
+      containers:
+      - name: nginx-sidecar
+        image: {{ .Values.cdcs.sidecar.image }}:{{ .Values.cdcs.sidecar.tag }}
+        imagePullPolicy: {{ .Values.cdcs.sidecar.imagePullPolicy }}
+        ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+        volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+              readOnly: true
+            - name: nginx-default-template-conf
+              mountPath: /etc/nginx/templates/default.conf.template
+              subPath: default.conf.template
+              readOnly: true
+            - name: staticfiles
+              mountPath: /srv/curator_static
+              readOnly: true
+      - image: {{ .Values.cdcs.image }}:{{ .Values.cdcs.tag }}
+        imagePullPolicy: {{ .Values.cdcs.imagePullPolicy }}
+        name: cdcs
+        args: ["$(PROJECT_NAME)", "gunicorn"]
+        env:
+        {{- range .Values.cdcs.envs }}
+        - name: {{ .name }}
+          value: "{{ .value }}"
+        {{- end }}
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.cdcs.secret.name) . }}"
+              key: django_secret_key
+        {{- if eq .Values.postgresql.architecture "replication" }}
+        - name: POSTGRES_HOST
+          value: "{{ .Release.Name }}-postgresql-{{.Values.postgresql.primary.name}}"
+        {{- else }}
+        - name: POSTGRES_HOST
+          value: "{{ .Release.Name }}-postgresql"
+        {{- end }}
+        - name: POSTGRES_PORT
+          value: "{{ .Values.postgresql.primary.service.ports.postgresql }}"
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.postgresql.secret.name) . }}"
+              key: database
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.postgresql.secret.name) . }}"
+              key: username
+        - name: POSTGRES_PASS
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.postgresql.secret.name) . }}"
+              key: password
+        {{- if eq .Values.postgresql.architecture "replication" }}
+        - name: POSTGRES_REPLICA_HOST
+          value: "{{ .Release.Name }}-postgresql-{{.Values.postgresql.readReplicas.name}}"
+        - name: POSTGRES_REPLICA_PORT
+          value: "{{ .Values.postgresql.readReplicas.service.ports.postgresql }}"
+        - name: POSTGRES_REPLICA_DB
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.postgresql.secret.name) . }}"
+              key: database
+        - name: POSTGRES_REPLICA_USER
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.postgresql.secret.name) . }}"
+              key: username
+        - name: POSTGRES_REPLICA_PASS
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.postgresql.secret.name) . }}"
+              key: password
+        {{- end }}
+        - name: MONGO_HOST
+          value: "{{ .Release.Name }}-mongodb"
+        - name: MONGO_PORT
+          value: "{{ .Values.mongodb.service.ports.mongodb }}"
+        {{- with (first .Values.mongodb.auth.databases) }}
+        - name: MONGO_DB
+          value: {{ . }}
+        {{- end }}
+        {{- with (first .Values.mongodb.auth.usernames) }}
+        - name: MONGO_USER
+          value: {{ . }}
+        {{- end }}
+        {{- if .Values.mongodb.auth.existingSecret }}
+        - name: MONGO_PASS
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.mongodb.auth.existingSecret) . }}"
+              key: mongodb-passwords
+        {{- else }}
+        {{- with (first .Values.mongodb.auth.passwords) }}
+        - name: MONGO_PASS
+          value: {{.}}
+        {{- end }}
+        {{- end }}
+        - name: REDIS_HOST
+          value: "{{ .Release.Name }}-redis-master"
+        - name: REDIS_PORT
+          value: "{{ .Values.redis.service.ports.redis }}"
+        {{- if .Values.redis.auth.existingSecret }}
+        - name: REDIS_PASS
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.redis.auth.existingSecret) . }}"
+              key: "{{ .Values.redis.auth.existingSecretPasswordKey }}"
+        {{- else }}
+        - name: REDIS_PASS
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.redis.secret.name) . }}"
+              key: password
+        {{- end }}
+        - name: DJANGO_SETTINGS_MODULE
+          value: "$(PROJECT_NAME).$(SETTINGS)"
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+            - name: staticfiles
+              mountPath: /srv/curator/static.prod
+            - name: mediafiles
+              mountPath: /srv/curator/media
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: "{{ .Release.Name }}-cdcs-nginx-conf"
+        - name: nginx-default-template-conf
+          configMap:
+            name: "{{ .Release.Name }}-cdcs-nginx-default-template-conf"
+        - name: staticfiles
+          emptyDir: {}
+        {{- if .Values.cdcs.persistence.media.existingClaim }}
+        - name: mediafiles
+          persistentVolumeClaim:
+            claimName: "{{ .Values.cdcs.persistence.media.existingClaim }}"
+        {{- else }}
+        - name: mediafiles
+          persistentVolumeClaim:
+            claimName: "{{ .Release.Name }}-cdcs-pvc-media"
+        {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      restartPolicy: Always
+      {{- with .Values.cdcs.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cdcs.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cdcs.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

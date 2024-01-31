@@ -1,0 +1,209 @@
+# Default values for helm-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+imagePullSecrets: []
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # allowPrivilegeEscalation: false
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+cdcs:
+  image: mdcs
+  tag: latest
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  imagePullPolicy: Always
+  replicas: 1
+  sidecar:
+    image: nginx
+    tag: 1.25
+    imagePullPolicy: Always
+  secret:
+    create: true
+    name: "{{ .Release.Name }}-cdcs-secret"
+    django_secret_key: DJANGO_SECRET_KEY
+  persistence:
+    media:
+      # Uncomment to use an existing claims for the media folder
+#      existingClaim: "cdcs-pvc-media"
+      # Set to false for an existing claim
+      create: true
+      size: 10Gi
+      storageClassName: ""
+  ingress:
+    enabled: true
+    className: ""
+    annotations:
+      kubernetes.io/ingress.class: "nginx"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    hostname: localhost
+    tls: [ ]
+    # Uncomment to set a TLS secret
+    #  - secretName: cdcs-tls
+  envs:
+    - name: PROJECT_NAME
+      value: "mdcs"
+    - name: SERVER_URI
+      value: "https://localhost"
+    - name: SERVER_NAME
+      value: "mdcs"
+    - name: ALLOWED_HOSTS
+      value: "localhost"
+    - name: SETTINGS
+      value: "settings"
+#    - name: MONITORING_SERVER_URI
+#      value: "localhost:8080"
+#    - name: OAI_ADMINS
+#      value: "admin@example.com"
+#    - name: ENABLE_SAML2_SSO_AUTH
+#      value: "True"
+#    - name: SAML_METADATA_REMOTE
+#      value: "http://localhost:8080/auth/realms/cdcs-realm/protocol/saml/descriptor"
+#    - name: SAML_METADATA_REMOTE_CERT
+#      value: "ca.crt"
+#    - name: SAML_METADATA_LOCAL
+#      value: "metadata.xml"
+#    - name: SAML_ATTRIBUTE_MAP_DIR
+#      value: "attr-maps"
+#    - name: SAML_ATTRIBUTES_MAP_IDENTIFIER
+#      value: "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+#    - name: SAML_ATTRIBUTES_MAP_UID_FIELD
+#      value: "uid"
+#    - name: SAML_ATTRIBUTES_MAP_EMAIL_FIELD
+#      value: "mail"
+#    - name: SAML_ATTRIBUTES_MAP_CN_FIELD
+#      value: "cn"
+#    - name: SAML_ATTRIBUTES_MAP_SN_FIELD
+#      value: "sn"
+#    - name: SAML_ATTRIBUTES_MAP_UID
+#      value: "urn:oid:0.9.2342.19200300.100.1.1"
+#    - name: SAML_ATTRIBUTES_MAP_EMAIL
+#      value: "urn:oid:1.2.840.113549.1.9.1"
+#    - name: SAML_ATTRIBUTES_MAP_CN
+#      value: "urn:oid:2.5.4.42"
+#    - name: SAML_ATTRIBUTES_MAP_SN
+#      value: "urn:oid:2.5.4.4"
+#    - name: SAML_DJANGO_USER_MAIN_ATTRIBUTE
+#      value: "username"
+#    - name: SAML_USE_NAME_ID_AS_USERNAME
+#      value: "False"
+#    - name: SAML_CREATE_UNKNOWN_USER
+#      value: "False"
+#    - name: SAML_XMLSEC_BIN_PATH
+#      value: "/usr/bin/xmlsec1"
+#    - name: SAML_WANT_RESPONSE_SIGNED
+#      value: "True"
+#    - name: SAML_WANT_ASSERTIONS_SIGNED
+#      value: "True"
+#    - name: SAML_LOGOUT_REQUESTS_SIGNED
+#      value: "True"
+#    - name: SAML_KEY_FILE
+#      value: "my.key"
+#    - name: SAML_CERT_FILE
+#      value: "ca.cert"
+#    - name: CONTACT_PERSON_1
+#      value: "Firstname1,Lastname1,Example Co.,contact1@example.com,technical"
+#    - name: CONTACT_PERSON_2
+#      value: "Firstname2,Lastname2,Example Co.,contact2@example.com,administrative"
+#    - name: ORGANIZATION_NAME_1
+#      value: "Example Company,en"
+#    - name: ORGANIZATION_NAME_2
+#      value: "Exempel AB,se"
+#    - name: ORGANIZATION_DISPLAY_NAME_1
+#      value: "Exempel AB,se"
+#    - name: ORGANIZATION_URL_1
+#      value: "http://example.com,en"
+#    - name: ORGANIZATION_URL_2
+#      value: "http://exemple.se,se"
+
+postgresql:
+  # See https://github.com/bitnami/charts/blob/master/bitnami/postgresql/
+  enabled: true
+  architecture: standalone
+  auth:
+    existingSecret: "{{ .Release.Name }}-postgres-secret"
+    username: cdcs
+    database: cdcs
+    replicationUsername: cdcs_user_replica
+  secret:
+    create: true
+    name: "{{ .Release.Name }}-postgres-secret"
+    password: cdcs_user_password
+    postgresPassword: cdcs_root_password
+    replicationPassword: cdcs_replica_password
+  primary:
+    service:
+      ports:
+        postgresql: 5432
+    # Uncomment to use an existing claim
+#    persistence:
+#      existingClaim: "cdcs-pvc-postgres"
+  readReplicas:
+    replicaCount: 1
+    service:
+      ports:
+        postgresql: 5432
+    # If replicas pvc not set, replicated data won't be persisted
+#    persistence:
+#      existingClaim: "cdcs-pvc-postgres-replica"
+
+mongodb:
+  # See https://github.com/bitnami/charts/tree/main/bitnami/mongodb
+  # Set to true if MONGODB_INDEXING or GRIDFS_STORAGE True in any CDCS settings files
+  enabled: true
+  architecture: standalone # or replicaset
+  auth:
+    enabled: true
+    databases:
+      - cdcs
+    usernames:
+      - mongo_user
+    passwords:
+      - mongo_pass
+    rootUser: mongo_admin_user
+    rootPassword: mongo_admin_pass
+    # Uncomment to use an existing secret for root and user passwords
+    # keys: mongodb-passwords, mongodb-root-password
+#    existingSecret: "mongodb"
+  persistence:
+    enabled: true
+    # Uncomment to use an existing claim (only when architecture=standalone)
+#    existingClaim: cdcs-pvc-mongo
+  disableJavascript: true
+  service:
+    ports:
+      mongodb: 27017
+
+redis:
+  # See https://github.com/bitnami/charts/tree/main/bitnami/redis
+  enabled: true
+  auth:
+    enabled: true
+    # Set name of existing secret
+    existingSecret: "{{ .Release.Name }}-redis-secret"
+    existingSecretPasswordKey: "password"
+  secret:
+    # Set to false if using existing secret
+    create: true
+    name: "{{ .Release.Name }}-redis-secret"
+    password: "redis_pass"
+  service:
+    ports:
+      redis: 6379
+  architecture: standalone
+  master:
+    persistence:
+      enabled: true
+      # Uncomment to use an existing claim
+#      existingClaim: cdcs-pvc-redis
