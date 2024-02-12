@@ -4,7 +4,7 @@ Follow the instructions below to deploy the CDCS in a Kubernetes cluster
 using YAML manifests.
 
 ## Prerequisites
-* [Kubernetes Cluster](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/)
+* [Kubernetes Cluster](https://kubernetes.io/docs/setup/)
 * [Ingress Nginx](https://kubernetes.github.io/ingress-nginx/deploy/)
 
 In single node deployment, allow deployment on the main node by typing:

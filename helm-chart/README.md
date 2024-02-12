@@ -1,7 +1,7 @@
 # Install with Helm
 
 ## Prerequisites
-* [Kubernetes Cluster](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/)
+* [Kubernetes Cluster](https://kubernetes.io/docs/setup/)
 * [Helm](https://helm.sh/docs/intro/install/)
 * [Ingress Nginx](https://kubernetes.github.io/ingress-nginx/deploy/)
 * PV provisioner support in the underlying infrastructure (or see the [Volumes](#volumes) section to use existing claims)
