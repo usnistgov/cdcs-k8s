@@ -46,6 +46,15 @@ The CDCS container can be configured using environment variables.
 The complete list of environment variables can be found in the
 [customized deployment](https://github.com/usnistgov/cdcs-docker?tab=readme-ov-file#1-customize-the-deployment)
 section of the CDCS Docker documentation.
+These environment variables can be set in the file `values.yaml`. 
+
+Example:
+```yaml
+cdcs:
+  envs:
+    - name: PROJECT_NAME
+      value: "mdcs"
+```
 
 Once the chart is installed, you should get a message telling you how to access the web server,
 such as:
