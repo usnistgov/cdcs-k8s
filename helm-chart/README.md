@@ -1,7 +1,9 @@
 # Install with Helm
 
 ## Prerequisites
-* Helm: https://helm.sh/docs/intro/install/
+* [Kubernetes Cluster](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/)
+* [Helm](https://helm.sh/docs/intro/install/)
+* [Ingress Nginx](https://kubernetes.github.io/ingress-nginx/deploy/)
 * PV provisioner support in the underlying infrastructure (or see the [Volumes](#volumes) section to use existing claims)
 
 ## Get CDCS dependencies
@@ -39,6 +41,11 @@ Override only specific fields of the `values.yaml` file, with the `--set` option
 ```commandline
 helm install -n mdcs-test --create-namespace mdcs-helm-test . --set cdcs.imagePullPolicy=IfNotPresent
 ```
+
+The CDCS container can be configured using environment variables. 
+The complete list of environment variables can be found in the
+[customized deployment](https://github.com/usnistgov/cdcs-docker?tab=readme-ov-file#1-customize-the-deployment)
+section of the CDCS Docker documentation.
 
 Once the chart is installed, you should get a message telling you how to access the web server,
 such as:
@@ -120,10 +127,10 @@ auth:
 
 ## Volumes
 
-To use existing PVC, first create the PVC by following these [instructions](../README.md#configure-volumes). Existing claims need to be created in
-the same namespace as the helm chart release. You can follow the 
-[Create new namespaces](https://kubernetes.io/docs/tasks/administer-cluster/namespaces-walkthrough/#create-new-namespaces) 
-instructions to create a namespace prior to creating the PVC.
+To use existing PVC, first create the PVC by following these [instructions](../manifests/README.md#configure-volumes). Existing claims need to be created in
+the same namespace as the helm chart release. You can follow the
+[instructions to create a namespace](https://kubernetes.io/docs/tasks/administer-cluster/namespaces-walkthrough/#create-new-namespaces) 
+prior to creating the PVC.
 
 ## Ingress TLS Secret
 
