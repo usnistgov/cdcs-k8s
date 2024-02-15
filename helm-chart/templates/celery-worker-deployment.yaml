@@ -1,46 +1,26 @@
+{{- if .Values.cdcs.celery.startService }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-cdcs-django
+  name: {{ .Release.Name }}-cdcs-celery-worker
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: {{ .Values.cdcs.replicas }}
+  replicas: {{ .Values.cdcs.celery.replicas }}
   selector:
     matchLabels:
-      component: cdcs-django
+      component: cdcs-celery-worker
   template:
     metadata:
       labels:
-        component: cdcs-django
+        component: cdcs-celery-worker
     spec:
       containers:
-      - name: nginx-sidecar
-        image: {{ .Values.cdcs.sidecar.image }}:{{ .Values.cdcs.sidecar.tag }}
-        imagePullPolicy: {{ .Values.cdcs.sidecar.imagePullPolicy }}
-        ports:
-            - name: http
-              containerPort: 80
-              protocol: TCP
-        volumeMounts:
-            - name: nginx-conf
-              mountPath: /etc/nginx/nginx.conf
-              subPath: nginx.conf
-              readOnly: true
-            - name: nginx-default-template-conf
-              mountPath: /etc/nginx/templates/default.conf.template
-              subPath: default.conf.template
-              readOnly: true
-            - name: staticfiles
-              mountPath: /srv/curator_static
-              readOnly: true
       - image: {{ .Values.cdcs.image }}:{{ .Values.cdcs.tag }}
         imagePullPolicy: {{ .Values.cdcs.imagePullPolicy }}
         name: cdcs
-        {{- if .Values.cdcs.celery.startService }}
         command:
-        - "/docker-entrypoint-django.sh"
-        {{- end }}
-        args: ["$(PROJECT_NAME)", "gunicorn"]
+        - "/docker-entrypoint-celery-worker.sh"
+        args: ["$(PROJECT_NAME)"]
         env:
         {{- range .Values.cdcs.envs }}
         - name: {{ .name }}
@@ -139,31 +119,6 @@ spec:
         {{- end }}
         - name: DJANGO_SETTINGS_MODULE
           value: "$(PROJECT_NAME).$(SETTINGS)"
-        ports:
-        - containerPort: 8000
-        volumeMounts:
-            - name: staticfiles
-              mountPath: /srv/curator/static.prod
-            - name: mediafiles
-              mountPath: /srv/curator/media
-      volumes:
-        - name: nginx-conf
-          configMap:
-            name: "{{ .Release.Name }}-cdcs-nginx-conf"
-        - name: nginx-default-template-conf
-          configMap:
-            name: "{{ .Release.Name }}-cdcs-nginx-default-template-conf"
-        - name: staticfiles
-          emptyDir: {}
-        {{- if .Values.cdcs.persistence.media.existingClaim }}
-        - name: mediafiles
-          persistentVolumeClaim:
-            claimName: "{{ .Values.cdcs.persistence.media.existingClaim }}"
-        {{- else }}
-        - name: mediafiles
-          persistentVolumeClaim:
-            claimName: "{{ .Release.Name }}-cdcs-pvc-media"
-        {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -171,15 +126,16 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       restartPolicy: Always
-      {{- with .Values.cdcs.nodeSelector }}
+      {{- with .Values.cdcs.celery.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.cdcs.affinity }}
+      {{- with .Values.cdcs.celery.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.cdcs.tolerations }}
+      {{- with .Values.cdcs.celery.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- end }}
