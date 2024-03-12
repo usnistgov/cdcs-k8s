@@ -21,6 +21,7 @@ spec:
   storageClassName: ""
   accessModes:
     - ReadWriteMany
+  volumeName: cdcs-pv-mongo
   resources:
     requests:
       storage: MONGO_STORAGE_SIZE

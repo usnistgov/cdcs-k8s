@@ -21,6 +21,7 @@ spec:
   storageClassName: ""
   accessModes:
     - ReadWriteMany
+  volumeName: cdcs-pv-postgres
   resources:
     requests:
       storage: POSTGRES_STORAGE_SIZE

@@ -21,6 +21,7 @@ spec:
   storageClassName: ""
   accessModes:
     - ReadWriteMany
+  volumeName: cdcs-pv-redis
   resources:
     requests:
       storage: REDIS_STORAGE_SIZE
