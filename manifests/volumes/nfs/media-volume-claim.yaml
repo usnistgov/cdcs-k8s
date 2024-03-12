@@ -21,6 +21,7 @@ spec:
   storageClassName: ""
   accessModes:
     - ReadWriteMany
+  volumeName: cdcs-pv-media
   resources:
     requests:
       storage: MEDIA_STORAGE_SIZE
