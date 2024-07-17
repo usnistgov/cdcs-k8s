@@ -17,6 +17,8 @@ spec:
       - name: nginx-sidecar
         image: {{ .Values.cdcs.sidecar.image }}:{{ .Values.cdcs.sidecar.tag }}
         imagePullPolicy: {{ .Values.cdcs.sidecar.imagePullPolicy }}
+        securityContext:
+          {{- toYaml .Values.cdcs.sidecar.securityContext | nindent 10 }}
         ports:
             - name: http
               containerPort: 80
@@ -35,6 +37,8 @@ spec:
               readOnly: true
       - image: {{ .Values.cdcs.image }}:{{ .Values.cdcs.tag }}
         imagePullPolicy: {{ .Values.cdcs.imagePullPolicy }}
+        securityContext:
+          {{- toYaml .Values.cdcs.securityContext | nindent 10 }}
         name: cdcs
         args: ["$(PROJECT_NAME)", "gunicorn"]
         env:
