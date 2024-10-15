@@ -51,6 +51,13 @@ cdcs:
     tls: [ ]
     # Uncomment to set a TLS secret
     #  - secretName: cdcs-tls
+  celery:
+    # Set true to start celery beat and workers independently from django server
+    startService: false
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    replicas: 1
   envs:
     - name: PROJECT_NAME
       value: "mdcs"
