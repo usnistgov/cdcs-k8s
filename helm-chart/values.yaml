@@ -24,11 +24,15 @@ cdcs:
   tolerations: []
   affinity: {}
   imagePullPolicy: Always
+  securityContext: {}
+  resources: {}
   replicas: 1
   sidecar:
     image: nginx
     tag: 1.25
     imagePullPolicy: Always
+    securityContext: {}
+    resources: {}
   secret:
     create: true
     name: "{{ .Release.Name }}-cdcs-secret"
@@ -136,7 +140,7 @@ cdcs:
 
 postgresql:
   # See https://github.com/bitnami/charts/blob/master/bitnami/postgresql/
-  enabled: true
+  enabled: false
   architecture: standalone
   auth:
     existingSecret: "{{ .Release.Name }}-postgres-secret"
@@ -144,12 +148,13 @@ postgresql:
     database: cdcs
     replicationUsername: cdcs_user_replica
   secret:
-    create: true
+    create: false
     name: "{{ .Release.Name }}-postgres-secret"
     password: cdcs_user_password
     postgresPassword: cdcs_root_password
     replicationPassword: cdcs_replica_password
   primary:
+    extendedConfiguration: ""
     service:
       ports:
         postgresql: 5432
@@ -158,12 +163,44 @@ postgresql:
 #      existingClaim: "cdcs-pvc-postgres"
   readReplicas:
     replicaCount: 1
+    extendedConfiguration: ""
     service:
       ports:
         postgresql: 5432
     # If replicas pvc not set, replicated data won't be persisted
 #    persistence:
 #      existingClaim: "cdcs-pvc-postgres-replica"
+
+postgresqlha:
+  enabled: true
+  postgresql:
+    replicaCount: 1
+    username: cdcs
+    database: cdcs
+    repmgrUsername: repmgr
+    repmgrDatabase: repmgr
+    extendedConf: ""
+    existingSecret: "{{ .Release.Name }}-postgresqlha-postgres-secret"
+    secret:
+      create: true
+      name: "{{ .Release.Name }}-postgresqlha-postgres-secret"
+      password: cdcs
+      postgresPassword: postgres
+      repmgrPassword: repmgr
+  pgpool:
+    existingSecret: "postgresqlha-pgpool-secret"
+    secret:
+      create: true
+      name: "postgresqlha-pgpool-secret"
+      adminPassword: pgpool_admin
+  persistence:
+    enabled: true
+    existingClaim: ""
+    storageClass: ""
+    size: 8Gi
+  service:
+    ports:
+      postgresql: 5432
 
 mongodb:
   # See https://github.com/bitnami/charts/tree/main/bitnami/mongodb
