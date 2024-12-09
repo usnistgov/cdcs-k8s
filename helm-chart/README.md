@@ -227,6 +227,10 @@ helm install -n mdcs-test --create-namespace mdcs-helm-test . --set postgresql.a
 
 #### PostgreSQL-HA Helm chart
 
+> :warning: **Persistence:** The chart only allows using 1 existing PVC, which works well with replicaCount=1.
+> When persistence is enabled and replicaCount > 1, it is recommended to use this chart on a cluster that 
+> supports dynamic volume provisioning.
+
 The PostgreSQL-HA Helm chart can be enabled by setting `postgresqlha.enabled=true`.
 This option does not require a custom Django router as all connections will be sent 
 to pgpool that will act as a load balancer between the PostgreSQL databases.

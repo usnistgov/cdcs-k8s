@@ -140,7 +140,7 @@ cdcs:
 
 postgresql:
   # See https://github.com/bitnami/charts/blob/master/bitnami/postgresql/
-  enabled: false
+  enabled: true
   architecture: standalone
   auth:
     existingSecret: "{{ .Release.Name }}-postgres-secret"
@@ -148,7 +148,7 @@ postgresql:
     database: cdcs
     replicationUsername: cdcs_user_replica
   secret:
-    create: false
+    create: true
     name: "{{ .Release.Name }}-postgres-secret"
     password: cdcs_user_password
     postgresPassword: cdcs_root_password
@@ -172,25 +172,27 @@ postgresql:
 #      existingClaim: "cdcs-pvc-postgres-replica"
 
 postgresqlha:
-  enabled: true
+  enabled: false
   postgresql:
-    replicaCount: 1
+    replicaCount: 3
     username: cdcs
     database: cdcs
     repmgrUsername: repmgr
     repmgrDatabase: repmgr
+    maxConnections: ""
     extendedConf: ""
     existingSecret: "{{ .Release.Name }}-postgresqlha-postgres-secret"
     secret:
-      create: true
+      create: false
       name: "{{ .Release.Name }}-postgresqlha-postgres-secret"
       password: cdcs
       postgresPassword: postgres
       repmgrPassword: repmgr
   pgpool:
+    reservedConnections: 0
     existingSecret: "postgresqlha-pgpool-secret"
     secret:
-      create: true
+      create: false
       name: "postgresqlha-pgpool-secret"
       adminPassword: pgpool_admin
   persistence:
