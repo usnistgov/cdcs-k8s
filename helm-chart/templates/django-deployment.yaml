@@ -17,6 +17,10 @@ spec:
       - name: nginx-sidecar
         image: {{ .Values.cdcs.sidecar.image }}:{{ .Values.cdcs.sidecar.tag }}
         imagePullPolicy: {{ .Values.cdcs.sidecar.imagePullPolicy }}
+        securityContext:
+          {{- toYaml .Values.cdcs.sidecar.securityContext | nindent 10 }}
+        resources:
+          {{- toYaml .Values.cdcs.sidecar.resources | nindent 10 }}
         ports:
             - name: http
               containerPort: 80
@@ -35,6 +39,10 @@ spec:
               readOnly: true
       - image: {{ .Values.cdcs.image }}:{{ .Values.cdcs.tag }}
         imagePullPolicy: {{ .Values.cdcs.imagePullPolicy }}
+        securityContext:
+          {{- toYaml .Values.cdcs.securityContext | nindent 10 }}
+        resources:
+          {{- toYaml .Values.cdcs.resources | nindent 10 }}
         name: cdcs
         {{- if .Values.cdcs.celery.startService }}
         command:
@@ -51,13 +59,14 @@ spec:
             secretKeyRef:
               name: "{{ tpl (.Values.cdcs.secret.name) . }}"
               key: django_secret_key
-        {{- if eq .Values.postgresql.architecture "replication" }}
-        - name: POSTGRES_HOST
-          value: "{{ .Release.Name }}-postgresql-{{.Values.postgresql.primary.name}}"
-        {{- else }}
+        {{- if .Values.postgresql.enabled }}
+          {{- if eq .Values.postgresql.architecture "standalone" }}
         - name: POSTGRES_HOST
           value: "{{ .Release.Name }}-postgresql"
-        {{- end }}
+          {{- else if eq .Values.postgresql.architecture "replication" }}
+        - name: POSTGRES_HOST
+          value: "{{ .Release.Name }}-postgresql-{{.Values.postgresql.primary.name}}"
+          {{- end }}
         - name: POSTGRES_PORT
           value: "{{ .Values.postgresql.primary.service.ports.postgresql }}"
         - name: POSTGRES_DB
@@ -75,7 +84,7 @@ spec:
             secretKeyRef:
               name: "{{ tpl (.Values.postgresql.secret.name) . }}"
               key: password
-        {{- if eq .Values.postgresql.architecture "replication" }}
+          {{- if eq .Values.postgresql.architecture "replication" }}
         - name: POSTGRES_REPLICA_HOST
           value: "{{ .Release.Name }}-postgresql-{{.Values.postgresql.readReplicas.name}}"
         - name: POSTGRES_REPLICA_PORT
@@ -94,6 +103,27 @@ spec:
           valueFrom:
             secretKeyRef:
               name: "{{ tpl (.Values.postgresql.secret.name) . }}"
+              key: password
+          {{- end }}
+        {{- else if .Values.postgresqlha.enabled }}
+        - name: POSTGRES_HOST
+          value: "{{ .Release.Name }}-postgresqlha-pgpool"
+        - name: POSTGRES_PORT
+          value: "{{ .Values.postgresqlha.service.ports.postgresql }}"
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.postgresqlha.postgresql.secret.name) . }}"
+              key: database
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.postgresqlha.postgresql.secret.name) . }}"
+              key: username
+        - name: POSTGRES_PASS
+          valueFrom:
+            secretKeyRef:
+              name: "{{ tpl (.Values.postgresqlha.postgresql.secret.name) . }}"
               key: password
         {{- end }}
         - name: MONGO_HOST

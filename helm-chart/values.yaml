@@ -24,11 +24,15 @@ cdcs:
   tolerations: []
   affinity: {}
   imagePullPolicy: Always
+  securityContext: {}
+  resources: {}
   replicas: 1
   sidecar:
     image: nginx
     tag: 1.25
     imagePullPolicy: Always
+    securityContext: {}
+    resources: {}
   secret:
     create: true
     name: "{{ .Release.Name }}-cdcs-secret"
@@ -150,6 +154,7 @@ postgresql:
     postgresPassword: cdcs_root_password
     replicationPassword: cdcs_replica_password
   primary:
+    extendedConfiguration: ""
     service:
       ports:
         postgresql: 5432
@@ -158,12 +163,46 @@ postgresql:
 #      existingClaim: "cdcs-pvc-postgres"
   readReplicas:
     replicaCount: 1
+    extendedConfiguration: ""
     service:
       ports:
         postgresql: 5432
     # If replicas pvc not set, replicated data won't be persisted
 #    persistence:
 #      existingClaim: "cdcs-pvc-postgres-replica"
+
+postgresqlha:
+  enabled: false
+  postgresql:
+    replicaCount: 3
+    username: cdcs
+    database: cdcs
+    repmgrUsername: repmgr
+    repmgrDatabase: repmgr
+    maxConnections: ""
+    extendedConf: ""
+    existingSecret: "{{ .Release.Name }}-postgresqlha-postgres-secret"
+    secret:
+      create: false
+      name: "{{ .Release.Name }}-postgresqlha-postgres-secret"
+      password: cdcs
+      postgresPassword: postgres
+      repmgrPassword: repmgr
+  pgpool:
+    reservedConnections: 0
+    existingSecret: "postgresqlha-pgpool-secret"
+    secret:
+      create: false
+      name: "postgresqlha-pgpool-secret"
+      adminPassword: pgpool_admin
+  persistence:
+    enabled: true
+    existingClaim: ""
+    storageClass: ""
+    size: 8Gi
+  service:
+    ports:
+      postgresql: 5432
 
 mongodb:
   # See https://github.com/bitnami/charts/tree/main/bitnami/mongodb

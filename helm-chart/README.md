@@ -203,6 +203,14 @@ helm install -n mdcs-test --create-namespace mdcs-helm-test . --set cdcs.replica
 
 ### PostgreSQL
 
+There are two ways to deploy PostgreSQL, using the 
+[PostgreSQL Helm chart](https://github.com/bitnami/charts/tree/main/bitnami/postgresql)
+or the [PostgreSQL High Availability Helm chart](https://github.com/bitnami/charts/tree/main/bitnami/postgresql-ha). 
+Both charts configure a cluster with a primary/replica topology, but the HA chart adds pgpool and the repmgr module.
+
+#### PostgreSQL Helm chart
+
+The PostgreSQL Helm chart can be enabled by setting `postgresql.enabled=true`.
 Read replicas can be enabled for the PostgreSQL databases by setting
 `postgresql.architecture=replication` and by configuring the `postgresql.readReplicas`
 fields:
@@ -217,12 +225,29 @@ Example:
 helm install -n mdcs-test --create-namespace mdcs-helm-test . --set postgresql.architecture=replication --set postgresql.readReplicas.replicaCount=1
 ```
 
+#### PostgreSQL-HA Helm chart
+
+> :warning: **Persistence:** The chart only allows using 1 existing PVC, which works well with replicaCount=1.
+> When persistence is enabled and replicaCount > 1, it is recommended to use this chart on a cluster that 
+> supports dynamic volume provisioning.
+
+The PostgreSQL-HA Helm chart can be enabled by setting `postgresqlha.enabled=true`.
+This option does not require a custom Django router as all connections will be sent 
+to pgpool that will act as a load balancer between the PostgreSQL databases.
+The number of replicas can be set by setting `postgresqlha.postgresql.replicaCount`
+
+Example:
+
+```commandline
+helm install -n mdcs-test --create-namespace mdcs-helm-test . --set postgresqlha.postgresql.replicaCount=3
+```
+
 ## Uninstall the chart
 
 To uninstall the chart, type the following command:
 
 ```commandline
-helm uninstall -n [NAMESPACE] [CHART] 
+helm uninstall -n [NAMESPACE] [RELEASE] 
 ```
 
 Example:
