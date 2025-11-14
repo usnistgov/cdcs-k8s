@@ -10,6 +10,8 @@
 
 ## Get CDCS dependencies
 
+:warning: Changes to Bitnami catalog starting from 08/28/2025: https://github.com/bitnami/charts/issues/35164
+
 Add the bitnami repository to pull the charts of CDCS dependencies:
 
 ```commandline
