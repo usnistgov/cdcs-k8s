@@ -149,12 +149,12 @@ postgresql:
     name: "postgres-cluster-ip-service"
     port: "5432"
   auth:
-      database: "cdcs"
+      database: ""
       existingSecret: "postgres"
       secretKeys:
         usernameKey: "POSTGRES_USER"
         passwordKey: "POSTGRES_PASSWORD"
-#        databaseKey: "POSTGRES_DB"
+        databaseKey: "POSTGRES_DB"
   readReplicas:
     service:
       name: ""
