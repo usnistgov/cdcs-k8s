@@ -180,4 +180,4 @@ mongodb:
       secretKeys:
         usernameKey: "MONGO_USER"
         passwordKey: "MONGO_PASS"
-#        databaseKey: "MONGO_INITDB_DATABASE"
+        databaseKey: "MONGO_INITDB_DATABASE"
