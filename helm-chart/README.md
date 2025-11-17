@@ -12,21 +12,13 @@
 
 :warning: Changes to Bitnami catalog starting from 08/28/2025: https://github.com/bitnami/charts/issues/35164
 
-Add the bitnami repository to pull the charts of CDCS dependencies:
-
-```commandline
-helm repo add bitnami https://charts.bitnami.com/bitnami
-```
-
-Then pull the charts:
-
-```commandline
-helm dependency build
-```
+Deploy the CDCS dependencies (PostgresSQL, Redis and optionally MongoDB): 
+1) using the manifests from this repository,
+2) using available helm charts or operators.
 
 ## Quick Start
 
-To install the CDCS and its dependencies, run the command below. By default, it will use
+To deploy the CDCS, run the command below. By default, it will use
 the basic configuration from the `values.yaml` file provided with this repository. See
 options below to override the basic configuration with your own.
 
@@ -108,54 +100,6 @@ CDCS_POD_NAME=$(kubectl get pod --namespace $HELM_RELEASE_NAMESPACE -l component
 kubectl exec -it --namespace $HELM_RELEASE_NAMESPACE $CDCS_POD_NAME -c cdcs -- python manage.py createsuperuser
 ```
 
-## MongoDB Secrets
-
-Passwords for MongoDB can be stored in a secret. To do so, MongoDB requires specific keys
-and changes to the `values.yaml` that will be described in this section.
-
-### Create a secret
-
-First, to create a secret for MongoDB, copy the file `mongo-secrets-example` to a new
-file called `mongo-secrets` and set the two variables `mongodb-root-password` and 
-`mongodb-passwords`:
-
-Example:
-
-```
-mongodb-root-password=mongo_admin_pass
-mongodb-passwords=mongo_pass
-```
-
-Create a secret from the environment file with the following command:
-
-```commandline
-kubectl create secret generic [SECRET] --from-env-file=./config/mongo-secrets --namespace [NAMESPACE] 
-```
-
-Example:
-
-```commandline
-kubectl create secret generic mongodb --from-env-file=./config/mongo-secrets --namespace mdcs-test 
-```
-
-### Edit values.yaml
-
-Then edit the `values.yaml` or your own override file, to use the secret:
-
-- Comment `auth.passwords` and `auth.rootPassword`
-- Uncomment `existingSecret` and put the name of the secret previously created.
-
-Example:
-
-```yml
-auth:
-#    passwords:
-#      - mongo_pass
-#    rootPassword: mongo_admin_pass
-    # Set the name of the secret created by the previous command
-    existingSecret: "mongodb"
-```
-
 ## Volumes
 
 To use existing PVC, first create the PVC by following
@@ -203,47 +147,6 @@ Example:
 helm install -n mdcs-test --create-namespace mdcs-helm-test . --set cdcs.replicas=2
 ```
 
-### PostgreSQL
-
-There are two ways to deploy PostgreSQL, using the 
-[PostgreSQL Helm chart](https://github.com/bitnami/charts/tree/main/bitnami/postgresql)
-or the [PostgreSQL High Availability Helm chart](https://github.com/bitnami/charts/tree/main/bitnami/postgresql-ha). 
-Both charts configure a cluster with a primary/replica topology, but the HA chart adds pgpool and the repmgr module.
-
-#### PostgreSQL Helm chart
-
-The PostgreSQL Helm chart can be enabled by setting `postgresql.enabled=true`.
-Read replicas can be enabled for the PostgreSQL databases by setting
-`postgresql.architecture=replication` and by configuring the `postgresql.readReplicas`
-fields:
-
-The Django server needs to be properly configured to use the replicas. See the
-[Django database routing](https://docs.djangoproject.com/en/4.2/topics/db/multi-db/#automatic-database-routing)
-documentation for more information.
-
-Example:
-
-```commandline
-helm install -n mdcs-test --create-namespace mdcs-helm-test . --set postgresql.architecture=replication --set postgresql.readReplicas.replicaCount=1
-```
-
-#### PostgreSQL-HA Helm chart
-
-> :warning: **Persistence:** The chart only allows using 1 existing PVC, which works well with replicaCount=1.
-> When persistence is enabled and replicaCount > 1, it is recommended to use this chart on a cluster that 
-> supports dynamic volume provisioning.
-
-The PostgreSQL-HA Helm chart can be enabled by setting `postgresqlha.enabled=true`.
-This option does not require a custom Django router as all connections will be sent 
-to pgpool that will act as a load balancer between the PostgreSQL databases.
-The number of replicas can be set by setting `postgresqlha.postgresql.replicaCount`
-
-Example:
-
-```commandline
-helm install -n mdcs-test --create-namespace mdcs-helm-test . --set postgresqlha.postgresql.replicaCount=3
-```
-
 ## Uninstall the chart
 
 To uninstall the chart, type the following command:
@@ -257,16 +160,3 @@ Example:
 ```commandline
 helm uninstall -n mdcs-test mdcs-helm-test 
 ```
-
-## Troubleshooting
-
-### MongoDB chart on ARM architectures
-
-The bitnami helm chart for MongoDB is currently not supported
-on ARM-based chips (e.g. Apple M1).
-
-### PostgreSQL and Redis charts conflicts
-
-The version of the bitnami chart for Redis required by the CDCS is not compatible with
-the version of the bitnami chart for PostgreSQL and needs to be downgraded
-(See comment in [Chart.yml](Chart.yaml)).

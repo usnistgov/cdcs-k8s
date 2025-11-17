@@ -36,7 +36,7 @@ cdcs:
   secret:
     create: true
     name: "{{ .Release.Name }}-cdcs-secret"
-    django_secret_key: DJANGO_SECRET_KEY
+    django_secret_key: ""
   persistence:
     media:
       # Uncomment to use an existing claims for the media folder
@@ -73,6 +73,10 @@ cdcs:
       value: "localhost"
     - name: SETTINGS
       value: "settings"
+    - name: MONGODB_INDEXING
+      value: "False"
+    - name: GRIDFS_STORAGE
+      value: "False"
 #    - name: MONITORING_SERVER_URI
 #      value: "localhost:8080"
 #    - name: OAI_ADMINS
@@ -139,125 +143,41 @@ cdcs:
 #      value: "http://exemple.se,se"
 
 postgresql:
-  # See https://github.com/bitnami/charts/blob/master/bitnami/postgresql/
-  image:
-    repository: bitnamilegacy/postgresql
   enabled: true
-  architecture: standalone
+  architecture: standalone # replication
+  service:
+    name: "postgres-cluster-ip-service"
+    port: "5432"
   auth:
-    existingSecret: "{{ .Release.Name }}-postgres-secret"
-    username: cdcs
-    database: cdcs
-    replicationUsername: cdcs_user_replica
-  secret:
-    create: true
-    name: "{{ .Release.Name }}-postgres-secret"
-    password: cdcs_user_password
-    postgresPassword: cdcs_root_password
-    replicationPassword: cdcs_replica_password
-  primary:
-    extendedConfiguration: ""
-    service:
-      ports:
-        postgresql: 5432
-    # Uncomment to use an existing claim
-#    persistence:
-#      existingClaim: "cdcs-pvc-postgres"
+      database: "cdcs"
+      existingSecret: "postgres"
+      secretKeys:
+        usernameKey: "POSTGRES_USER"
+        passwordKey: "POSTGRES_PASSWORD"
+#        databaseKey: "POSTGRES_DB"
   readReplicas:
-    replicaCount: 1
-    extendedConfiguration: ""
     service:
-      ports:
-        postgresql: 5432
-    # If replicas pvc not set, replicated data won't be persisted
-#    persistence:
-#      existingClaim: "cdcs-pvc-postgres-replica"
-
-postgresqlha:
-  image:
-    repository: bitnamilegacy/postgresql-ha
-  enabled: false
-  postgresql:
-    replicaCount: 3
-    username: cdcs
-    database: cdcs
-    repmgrUsername: repmgr
-    repmgrDatabase: repmgr
-    maxConnections: ""
-    extendedConf: ""
-    existingSecret: "{{ .Release.Name }}-postgresqlha-postgres-secret"
-    secret:
-      create: false
-      name: "{{ .Release.Name }}-postgresqlha-postgres-secret"
-      password: cdcs
-      postgresPassword: postgres
-      repmgrPassword: repmgr
-  pgpool:
-    reservedConnections: 0
-    existingSecret: "postgresqlha-pgpool-secret"
-    secret:
-      create: false
-      name: "postgresqlha-pgpool-secret"
-      adminPassword: pgpool_admin
-  persistence:
-    enabled: true
-    existingClaim: ""
-    storageClass: ""
-    size: 8Gi
-  service:
-    ports:
-      postgresql: 5432
-
-mongodb:
-  # See https://github.com/bitnami/charts/tree/main/bitnami/mongodb
-  # Set to true if MONGODB_INDEXING or GRIDFS_STORAGE True in any CDCS settings files
-  image:
-    repository: bitnamilegacy/mongodb
-  enabled: true
-  architecture: standalone # or replicaset
-  auth:
-    enabled: true
-    databases:
-      - cdcs
-    usernames:
-      - mongo_user
-    passwords:
-      - mongo_pass
-    rootUser: mongo_admin_user
-    rootPassword: mongo_admin_pass
-    # Uncomment to use an existing secret for root and user passwords
-    # keys: mongodb-passwords, mongodb-root-password
-#    existingSecret: "mongodb"
-  persistence:
-    enabled: true
-    # Uncomment to use an existing claim (only when architecture=standalone)
-#    existingClaim: cdcs-pvc-mongo
-  disableJavascript: true
-  service:
-    ports:
-      mongodb: 27017
+      name: ""
+      port: "5432"
 
 redis:
-  # See https://github.com/bitnami/charts/tree/main/bitnami/redis
-  image:
-    repository: bitnamilegacy/redis
   enabled: true
-  auth:
-    enabled: true
-    # Set name of existing secret
-    existingSecret: "{{ .Release.Name }}-redis-secret"
-    existingSecretPasswordKey: "password"
-  secret:
-    # Set to false if using existing secret
-    create: true
-    name: "{{ .Release.Name }}-redis-secret"
-    password: "redis_pass"
   service:
-    ports:
-      redis: 6379
-  architecture: standalone
-  master:
-    persistence:
-      enabled: true
-      # Uncomment to use an existing claim
-#      existingClaim: cdcs-pvc-redis
+    name: "redis-cluster-ip-service"
+    port: "6379"
+  auth:
+      existingSecret: "redis"
+      secretKeys:
+        passwordKey: "REDIS_PASS"
+
+mongodb:
+  enabled: false
+  service:
+    name: "mongo-cluster-ip-service"
+    port: "27017"
+  auth:
+      existingSecret: "mongodb"
+      secretKeys:
+        usernameKey: "MONGO_USER"
+        passwordKey: "MONGO_PASS"
+#        databaseKey: "MONGO_INITDB_DATABASE"
