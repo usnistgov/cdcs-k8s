@@ -60,113 +60,93 @@ spec:
               name: "{{ tpl (.Values.cdcs.secret.name) . }}"
               key: django_secret_key
         {{- if .Values.postgresql.enabled }}
-          {{- if eq .Values.postgresql.architecture "standalone" }}
+        {{- with .Values.postgresql }}
         - name: POSTGRES_HOST
-          value: "{{ .Release.Name }}-postgresql"
-          {{- else if eq .Values.postgresql.architecture "replication" }}
-        - name: POSTGRES_HOST
-          value: "{{ .Release.Name }}-postgresql-{{.Values.postgresql.primary.name}}"
-          {{- end }}
+          value: "{{ .service.name }}"
         - name: POSTGRES_PORT
-          value: "{{ .Values.postgresql.primary.service.ports.postgresql }}"
+          value: "{{ .service.port }}"
         - name: POSTGRES_DB
+        {{- if and .auth.existingSecret .auth.secretKeys.databaseKey }}
           valueFrom:
             secretKeyRef:
-              name: "{{ tpl (.Values.postgresql.secret.name) . }}"
-              key: database
+              name: "{{.auth.existingSecret}}"
+              key: "{{.auth.secretKeys.databaseKey}}"
+        {{- else }}
+          value: "{{.auth.database}}"
+        {{- end }}
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: "{{ tpl (.Values.postgresql.secret.name) . }}"
-              key: username
+              name: "{{.auth.existingSecret}}"
+              key: "{{.auth.secretKeys.usernameKey}}"
         - name: POSTGRES_PASS
           valueFrom:
             secretKeyRef:
-              name: "{{ tpl (.Values.postgresql.secret.name) . }}"
-              key: password
-          {{- if eq .Values.postgresql.architecture "replication" }}
+              name: "{{.auth.existingSecret}}"
+              key: "{{.auth.secretKeys.passwordKey}}"
+        {{- if eq .architecture "replication" }}
         - name: POSTGRES_REPLICA_HOST
-          value: "{{ .Release.Name }}-postgresql-{{.Values.postgresql.readReplicas.name}}"
+          value: "{{ .readReplicas.service.name }}"
         - name: POSTGRES_REPLICA_PORT
-          value: "{{ .Values.postgresql.readReplicas.service.ports.postgresql }}"
+          value: "{{ .readReplicas.service.port }}"
         - name: POSTGRES_REPLICA_DB
-          valueFrom:
-            secretKeyRef:
-              name: "{{ tpl (.Values.postgresql.secret.name) . }}"
-              key: database
+        {{- if and .auth.existingSecret .auth.secretKeys.databaseKey }}
+        valueFrom:
+          secretKeyRef:
+            name: "{{.auth.existingSecret}}"
+            key: "{{.auth.secretKeys.databaseKey}}"
+        {{- else }}
+        value: "{{.auth.database}}"
+        {{- end }}
         - name: POSTGRES_REPLICA_USER
           valueFrom:
             secretKeyRef:
-              name: "{{ tpl (.Values.postgresql.secret.name) . }}"
-              key: username
+              name: "{{.auth.existingSecret}}"
+              key: "{{.auth.secretKeys.usernameKey}}"
         - name: POSTGRES_REPLICA_PASS
           valueFrom:
             secretKeyRef:
-              name: "{{ tpl (.Values.postgresql.secret.name) . }}"
-              key: password
-          {{- end }}
-        {{- else if .Values.postgresqlha.enabled }}
-        - name: POSTGRES_HOST
-          value: "{{ .Release.Name }}-postgresqlha-pgpool"
-        - name: POSTGRES_PORT
-          value: "{{ .Values.postgresqlha.service.ports.postgresql }}"
-        - name: POSTGRES_DB
-          valueFrom:
-            secretKeyRef:
-              name: "{{ tpl (.Values.postgresqlha.postgresql.secret.name) . }}"
-              key: database
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: "{{ tpl (.Values.postgresqlha.postgresql.secret.name) . }}"
-              key: username
-        - name: POSTGRES_PASS
-          valueFrom:
-            secretKeyRef:
-              name: "{{ tpl (.Values.postgresqlha.postgresql.secret.name) . }}"
-              key: password
-        {{- end }}
+              name: "{{.auth.existingSecret}}"
+              key: "{{.auth.secretKeys.passwordKey}}"
+        {{- end }} # end if replication
+        {{- end }} # end with postgresql
+        {{- end }} # end if postgresql
+        {{- if .Values.mongodb.enabled }}
+        {{- with .Values.mongodb }}
         - name: MONGO_HOST
-          value: "{{ .Release.Name }}-mongodb"
+          value: "{{ .service.name }}"
         - name: MONGO_PORT
-          value: "{{ .Values.mongodb.service.ports.mongodb }}"
-        {{- with (first .Values.mongodb.auth.databases) }}
+          value: "{{ .service.port }}"
         - name: MONGO_DB
-          value: {{ . }}
-        {{- end }}
-        {{- with (first .Values.mongodb.auth.usernames) }}
+          valueFrom:
+            secretKeyRef:
+              name: "{{.auth.existingSecret}}"
+              key: "{{ .auth.secretKeys.databaseKey }}"
         - name: MONGO_USER
-          value: {{ . }}
-        {{- end }}
-        {{- if .Values.mongodb.auth.existingSecret }}
+          valueFrom:
+            secretKeyRef:
+              name: "{{.auth.existingSecret}}"
+              key: "{{ .auth.secretKeys.usernameKey }}"
         - name: MONGO_PASS
           valueFrom:
             secretKeyRef:
-              name: "{{ tpl (.Values.mongodb.auth.existingSecret) . }}"
-              key: mongodb-passwords
-        {{- else }}
-        {{- with (first .Values.mongodb.auth.passwords) }}
-        - name: MONGO_PASS
-          value: {{.}}
-        {{- end }}
-        {{- end }}
+              name: "{{.auth.existingSecret}}"
+              key: "{{ .auth.secretKeys.passwordKey }}"
+        {{- end }} # end with mongodb
+        {{- end }} # end if mongodb
+        {{- if .Values.redis.enabled }}
+        {{- with .Values.redis }}
         - name: REDIS_HOST
-          value: "{{ .Release.Name }}-redis-master"
+          value: "{{ .service.name }}"
         - name: REDIS_PORT
-          value: "{{ .Values.redis.service.ports.redis }}"
-        {{- if .Values.redis.auth.existingSecret }}
+          value: "{{ .service.port }}"
         - name: REDIS_PASS
           valueFrom:
             secretKeyRef:
-              name: "{{ tpl (.Values.redis.auth.existingSecret) . }}"
-              key: "{{ .Values.redis.auth.existingSecretPasswordKey }}"
-        {{- else }}
-        - name: REDIS_PASS
-          valueFrom:
-            secretKeyRef:
-              name: "{{ tpl (.Values.redis.secret.name) . }}"
-              key: password
-        {{- end }}
+              name: "{{.auth.existingSecret}}"
+              key: "{{ .auth.secretKeys.passwordKey }}"
+        {{- end }} # end with redis
+        {{- end }} # end if redis
         - name: DJANGO_SETTINGS_MODULE
           value: "$(PROJECT_NAME).$(SETTINGS)"
         ports:
